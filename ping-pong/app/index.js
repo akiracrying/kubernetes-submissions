@@ -79,7 +79,11 @@ async function incrementCounter() {
 }
 
 const server = http.createServer(async (req, res) => {
-  if (req.url === '/pingpong' && req.method === 'GET') {
+  // Health check endpoint for Ingress
+  if (req.url === '/' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('OK');
+  } else if (req.url === '/pingpong' && req.method === 'GET') {
     const counter = await incrementCounter();
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end(`pong ${counter}`);

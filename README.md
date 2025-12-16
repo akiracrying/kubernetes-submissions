@@ -32,3 +32,4 @@ Submissions for k8s MOOC course
 
 ### Chapter 3
 - [3.1](../../tree/3.1/ping-pong)
+- [3.2](../../tree/3.2/log_output)

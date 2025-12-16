@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: writer
-          image: akiracry/log-output-writer:2.3
+          image: akiracry/log-output-writer:3.2
           volumeMounts:
             - name: shared-volume
               mountPath: /shared
