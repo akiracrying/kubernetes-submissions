@@ -2,10 +2,44 @@ const http = require('http');
 const fs = require('fs');
 
 const PORT = process.env.PORT || 3000;
+const PING_PONG_SERVICE = process.env.PING_PONG_SERVICE || 'ping-pong';
+const PING_PONG_PORT = process.env.PING_PONG_PORT || '3000';
 const LOGS_FILE = '/shared/logs.txt';
-const COUNTER_FILE = '/shared/pingpong-counter.txt';
 
-const server = http.createServer((req, res) => {
+function getPingPongCount() {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: PING_PONG_SERVICE,
+      port: PING_PONG_PORT,
+      path: '/pings',
+      method: 'GET'
+    };
+
+    const req = http.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      res.on('end', () => {
+        try {
+          const count = parseInt(data.trim()) || 0;
+          resolve(count);
+        } catch (error) {
+          resolve(0);
+        }
+      });
+    });
+
+    req.on('error', (error) => {
+      console.error('Error fetching ping-pong count:', error);
+      resolve(0);
+    });
+
+    req.end();
+  });
+}
+
+const server = http.createServer(async (req, res) => {
   if (req.url === '/' && req.method === 'GET') {
     try {
       let output = '';
@@ -20,15 +54,8 @@ const server = http.createServer((req, res) => {
         }
       }
       
-      // Read ping-pong counter
-      let pingPongCount = 0;
-      if (fs.existsSync(COUNTER_FILE)) {
-        try {
-          pingPongCount = parseInt(fs.readFileSync(COUNTER_FILE, 'utf8')) || 0;
-        } catch (error) {
-          // Counter file might be empty or invalid
-        }
-      }
+      // Get ping-pong count via HTTP
+      const pingPongCount = await getPingPongCount();
       
       // Format output: timestamp:randomString.\nPing / Pongs: X
       if (output) {

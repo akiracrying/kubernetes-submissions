@@ -19,9 +19,13 @@ spec:
             - name: shared-volume
               mountPath: /shared
         - name: reader
-          image: akiracry/log-output-reader:1.11
+          image: akiracry/log-output-reader:2.1
           env:
             - name: PORT
+              value: "3000"
+            - name: PING_PONG_SERVICE
+              value: "ping-pong"
+            - name: PING_PONG_PORT
               value: "3000"
           volumeMounts:
             - name: shared-volume
