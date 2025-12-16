@@ -187,12 +187,81 @@ const server = http.createServer(async (req, res) => {
               }
             </style>
             <script>
+              const TODO_BACKEND_URL = '/api/todos';
+              
               function validateInput(input) {
                 if (input.value.length > 140) {
                   input.value = input.value.substring(0, 140);
                   alert('Todo cannot be longer than 140 characters');
                 }
               }
+              
+              async function loadTodos() {
+                try {
+                  const response = await fetch(TODO_BACKEND_URL);
+                  const todos = await response.json();
+                  renderTodos(todos);
+                } catch (error) {
+                  console.error('Error loading todos:', error);
+                }
+              }
+              
+              function renderTodos(todos) {
+                const todoList = document.getElementById('todo-list');
+                todoList.innerHTML = '';
+                todos.forEach(todo => {
+                  const li = document.createElement('li');
+                  li.className = 'todo-item';
+                  li.textContent = todo.text;
+                  todoList.appendChild(li);
+                });
+              }
+              
+              async function createTodo() {
+                const input = document.querySelector('.todo-input');
+                const text = input.value.trim();
+                
+                if (text.length === 0) {
+                  alert('Todo cannot be empty');
+                  return;
+                }
+                
+                if (text.length > 140) {
+                  alert('Todo cannot be longer than 140 characters');
+                  return;
+                }
+                
+                try {
+                  const response = await fetch(TODO_BACKEND_URL, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text })
+                  });
+                  
+                  if (response.ok) {
+                    input.value = '';
+                    loadTodos();
+                  } else {
+                    const error = await response.json();
+                    alert(error.error || 'Error creating todo');
+                  }
+                } catch (error) {
+                  console.error('Error creating todo:', error);
+                  alert('Error creating todo');
+                }
+              }
+              
+              document.addEventListener('DOMContentLoaded', function() {
+                loadTodos();
+                document.querySelector('.create-button').addEventListener('click', createTodo);
+                document.querySelector('.todo-input').addEventListener('keypress', function(e) {
+                  if (e.key === 'Enter') {
+                    createTodo();
+                  }
+                });
+              });
             </script>
           </head>
           <body>
@@ -210,10 +279,8 @@ const server = http.createServer(async (req, res) => {
                   />
                   <button type="button" class="create-button">Create todo</button>
                 </form>
-                <ul class="todo-list">
-                  <li class="todo-item">Learn JavaScript</li>
-                  <li class="todo-item">Learn React</li>
-                  <li class="todo-item">Build a project</li>
+                <ul class="todo-list" id="todo-list">
+                  <li class="todo-item">Loading todos...</li>
                 </ul>
               </div>
               <div class="footer">
