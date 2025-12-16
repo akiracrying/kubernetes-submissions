@@ -15,11 +15,36 @@ spec:
     spec:
       containers:
         - name: todo-backend
-          image: akiracry/todo-backend:2.6
+          image: akiracry/todo-backend:2.8
           env:
             - name: PORT
               valueFrom:
                 configMapKeyRef:
                   name: todo-backend-config
                   key: PORT
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-backend-config
+                  key: DB_HOST
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-backend-config
+                  key: DB_PORT
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-backend-config
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: todo-backend-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: todo-backend-secret
+                  key: DB_PASSWORD
 
