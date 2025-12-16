@@ -14,8 +14,15 @@ spec:
     spec:
       containers:
         - name: ping-pong
-          image: akiracry/ping-pong:1.9
+          image: akiracry/ping-pong:1.11
           env:
             - name: PORT
               value: "3000"
+          volumeMounts:
+            - name: shared-volume
+              mountPath: /shared
+      volumes:
+        - name: shared-volume
+          persistentVolumeClaim:
+            claimName: shared-pvc
 

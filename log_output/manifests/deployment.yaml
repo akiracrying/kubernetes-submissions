@@ -14,12 +14,12 @@ spec:
     spec:
       containers:
         - name: writer
-          image: akiracry/log-output-writer:1.10
+          image: akiracry/log-output-writer:1.11
           volumeMounts:
             - name: shared-volume
               mountPath: /shared
         - name: reader
-          image: akiracry/log-output-reader:1.10
+          image: akiracry/log-output-reader:1.11
           env:
             - name: PORT
               value: "3000"
@@ -28,4 +28,5 @@ spec:
               mountPath: /shared
       volumes:
         - name: shared-volume
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: shared-pvc
