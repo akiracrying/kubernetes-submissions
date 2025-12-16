@@ -1,42 +1,181 @@
 const http = require('http');
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
 
 const PORT = process.env.PORT || 3000;
+const CACHE_DIR = '/cache';
+const IMAGE_FILE = path.join(CACHE_DIR, 'image.jpg');
+const METADATA_FILE = path.join(CACHE_DIR, 'metadata.json');
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 
-const server = http.createServer((req, res) => {
+// Ensure cache directory exists
+if (!fs.existsSync(CACHE_DIR)) {
+  fs.mkdirSync(CACHE_DIR, { recursive: true });
+}
+
+function downloadImage() {
+  return new Promise((resolve, reject) => {
+    const url = 'https://picsum.photos/1200';
+    https.get(url, (response) => {
+      if (response.statusCode === 302 || response.statusCode === 301) {
+        // Follow redirect
+        https.get(response.headers.location, (redirectResponse) => {
+          const fileStream = fs.createWriteStream(IMAGE_FILE);
+          redirectResponse.pipe(fileStream);
+          fileStream.on('finish', () => {
+            const metadata = {
+              timestamp: Date.now(),
+              url: response.headers.location || url
+            };
+            fs.writeFileSync(METADATA_FILE, JSON.stringify(metadata));
+            console.log('Image downloaded and cached');
+            resolve();
+          });
+        }).on('error', reject);
+      } else {
+        const fileStream = fs.createWriteStream(IMAGE_FILE);
+        response.pipe(fileStream);
+        fileStream.on('finish', () => {
+          const metadata = {
+            timestamp: Date.now(),
+            url: url
+          };
+          fs.writeFileSync(METADATA_FILE, JSON.stringify(metadata));
+          console.log('Image downloaded and cached');
+          resolve();
+        });
+      }
+    }).on('error', reject);
+  });
+}
+
+function getImage() {
+  return new Promise(async (resolve) => {
+    let shouldDownload = false;
+    let showOld = false;
+
+    if (fs.existsSync(METADATA_FILE) && fs.existsSync(IMAGE_FILE)) {
+      try {
+        const metadata = JSON.parse(fs.readFileSync(METADATA_FILE, 'utf8'));
+        const age = Date.now() - metadata.timestamp;
+        
+        if (age > CACHE_DURATION * 2) {
+          // More than 20 minutes - definitely need new image
+          shouldDownload = true;
+        } else if (age > CACHE_DURATION) {
+          // Between 10-20 minutes - show old one more time, then download new
+          showOld = true;
+          shouldDownload = true;
+        }
+        // Less than 10 minutes - use cached image
+      } catch (error) {
+        console.error('Error reading metadata:', error);
+        shouldDownload = true;
+      }
+    } else {
+      shouldDownload = true;
+    }
+
+    if (showOld && fs.existsSync(IMAGE_FILE)) {
+      // Show old image one more time
+      resolve(fs.readFileSync(IMAGE_FILE));
+    } else if (shouldDownload) {
+      // Download new image
+      try {
+        await downloadImage();
+        resolve(fs.readFileSync(IMAGE_FILE));
+      } catch (error) {
+        console.error('Error downloading image:', error);
+        // Fallback to cached image if available
+        if (fs.existsSync(IMAGE_FILE)) {
+          resolve(fs.readFileSync(IMAGE_FILE));
+        } else {
+          resolve(null);
+        }
+      }
+    } else {
+      // Use cached image
+      resolve(fs.readFileSync(IMAGE_FILE));
+    }
+  });
+}
+
+const server = http.createServer(async (req, res) => {
   if (req.url === '/' && req.method === 'GET') {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Todo App</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              max-width: 600px;
-              margin: 50px auto;
-              padding: 20px;
-              background-color: #f5f5f5;
-            }
-            h1 {
-              color: #333;
-            }
-            .container {
-              background: white;
-              padding: 20px;
-              border-radius: 8px;
-              box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h1>Todo App</h1>
-            <p>Welcome to the Todo Application!</p>
-          </div>
-        </body>
-      </html>
-    `);
+    const image = await getImage();
+    
+    if (image) {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      const imageBase64 = image.toString('base64');
+      res.end(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>The project App</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                max-width: 1200px;
+                margin: 50px auto;
+                padding: 20px;
+                background-color: #f5f5f5;
+              }
+              h1 {
+                color: #333;
+                text-align: center;
+              }
+              .container {
+                background: white;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              }
+              img {
+                width: 100%;
+                height: auto;
+                border-radius: 8px;
+                margin: 20px 0;
+              }
+              .footer {
+                text-align: center;
+                color: #666;
+                margin-top: 20px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>The project App</h1>
+              <img src="data:image/jpeg;base64,${imageBase64}" alt="Random image from Lorem Picsum" />
+              <div class="footer">
+                <p>DevOps with Kubernetes 2025</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+    } else {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>The project App</title>
+          </head>
+          <body>
+            <h1>Loading image...</h1>
+          </body>
+        </html>
+      `);
+    }
+  } else if (req.url === '/shutdown' && req.method === 'POST') {
+    // For testing purposes - shutdown the container
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Shutting down...\n');
+    setTimeout(() => {
+      process.exit(0);
+    }, 1000);
   } else {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Not Found');
