@@ -15,8 +15,18 @@ spec:
     spec:
       containers:
         - name: ping-pong
-          image: akiracry/ping-pong:2.3
+          image: akiracry/ping-pong:2.7
           env:
             - name: PORT
               value: "3000"
+            - name: DB_HOST
+              value: "postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_PASSWORD
+              value: "postgres"
+            - name: DB_NAME
+              value: "pingpong"
 

@@ -1,0 +1,10 @@
+{
+  "name": "ping-pong",
+  "version": "1.0.0",
+  "description": "Ping-pong application",
+  "main": "index.js",
+  "dependencies": {
+    "pg": "^8.11.3"
+  }
+}
+
