@@ -20,7 +20,7 @@ spec:
             - name: shared-volume
               mountPath: /shared
         - name: reader
-          image: akiracry/log-output-reader:2.3
+          image: akiracry/log-output-reader:2.5
           env:
             - name: PORT
               value: "3000"
@@ -28,10 +28,20 @@ spec:
               value: "ping-pong"
             - name: PING_PONG_PORT
               value: "3000"
+            - name: MESSAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: log-output-config
+                  key: MESSAGE
           volumeMounts:
             - name: shared-volume
               mountPath: /shared
+            - name: config-volume
+              mountPath: /config
       volumes:
         - name: shared-volume
           persistentVolumeClaim:
             claimName: shared-pvc
+        - name: config-volume
+          configMap:
+            name: log-output-config

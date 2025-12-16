@@ -23,3 +23,4 @@ Submissions for k8s MOOC course
 - [2.2](../../tree/2.2/the-project)
 - [2.3](../../tree/2.3/log_output)
 - [2.4](../../tree/2.4/the-project)
+- [2.5](../../tree/2.5/log_output)
