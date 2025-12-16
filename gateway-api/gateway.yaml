@@ -4,7 +4,7 @@ metadata:
   name: exercises-gateway
   namespace: exercises
 spec:
-  gatewayClassName: istio
+  gatewayClassName: gke-l7-global-external-managed
   listeners:
     - name: http
       protocol: HTTP
