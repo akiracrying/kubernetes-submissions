@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: log-output
+  namespace: exercises
 spec:
   replicas: 1
   selector:
@@ -14,12 +15,12 @@ spec:
     spec:
       containers:
         - name: writer
-          image: akiracry/log-output-writer:1.11
+          image: akiracry/log-output-writer:2.3
           volumeMounts:
             - name: shared-volume
               mountPath: /shared
         - name: reader
-          image: akiracry/log-output-reader:2.1
+          image: akiracry/log-output-reader:2.3
           env:
             - name: PORT
               value: "3000"
