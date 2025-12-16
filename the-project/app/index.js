@@ -142,12 +142,80 @@ const server = http.createServer(async (req, res) => {
                 color: #666;
                 margin-top: 20px;
               }
+              .todo-section {
+                margin-top: 30px;
+              }
+              .todo-form {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 20px;
+              }
+              .todo-input {
+                flex: 1;
+                padding: 10px;
+                font-size: 16px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+              }
+              .todo-input:focus {
+                outline: none;
+                border-color: #4CAF50;
+              }
+              .create-button {
+                padding: 10px 20px;
+                font-size: 16px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+              }
+              .create-button:hover {
+                background-color: #45a049;
+              }
+              .todo-list {
+                list-style-type: none;
+                padding: 0;
+                margin: 0;
+              }
+              .todo-item {
+                padding: 10px;
+                margin-bottom: 8px;
+                background-color: #f9f9f9;
+                border-left: 3px solid #4CAF50;
+                border-radius: 4px;
+              }
             </style>
+            <script>
+              function validateInput(input) {
+                if (input.value.length > 140) {
+                  input.value = input.value.substring(0, 140);
+                  alert('Todo cannot be longer than 140 characters');
+                }
+              }
+            </script>
           </head>
           <body>
             <div class="container">
               <h1>The project App</h1>
               <img src="data:image/jpeg;base64,${imageBase64}" alt="Random image from Lorem Picsum" />
+              <div class="todo-section">
+                <form class="todo-form" onsubmit="event.preventDefault();">
+                  <input 
+                    type="text" 
+                    class="todo-input" 
+                    placeholder="Enter todo (max 140 characters)" 
+                    maxlength="140"
+                    oninput="validateInput(this)"
+                  />
+                  <button type="button" class="create-button">Create todo</button>
+                </form>
+                <ul class="todo-list">
+                  <li class="todo-item">Learn JavaScript</li>
+                  <li class="todo-item">Learn React</li>
+                  <li class="todo-item">Build a project</li>
+                </ul>
+              </div>
               <div class="footer">
                 <p>DevOps with Kubernetes 2025</p>
               </div>
