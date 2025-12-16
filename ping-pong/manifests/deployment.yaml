@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: ping-pong
-          image: akiracry/ping-pong:3.2
+          image: akiracry/ping-pong:3.4
           env:
             - name: PORT
               value: "3000"
