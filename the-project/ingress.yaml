@@ -1,17 +1,17 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: log-output
+  name: the-project
 spec:
   rules:
-    - host: log-output.local
+    - host: the-project.local
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: log-output
+                name: the-project
                 port:
                   number: 3000
 
