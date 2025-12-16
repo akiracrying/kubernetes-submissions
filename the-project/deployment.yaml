@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: the-project
+  namespace: project
 spec:
   replicas: 1
   selector:
@@ -14,7 +15,7 @@ spec:
     spec:
       containers:
         - name: the-project
-          image: akiracry/the-project:2.2
+          image: akiracry/the-project:2.4
           env:
             - name: PORT
               value: "3000"
