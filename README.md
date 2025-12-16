@@ -29,3 +29,6 @@ Submissions for k8s MOOC course
 - [2.8](../../tree/2.8/the-project)
 - [2.9](../../tree/2.9/the-project)
 - [2.10](../../tree/2.10/the-project)
+
+### Chapter 3
+- [3.1](../../tree/3.1/ping-pong)
