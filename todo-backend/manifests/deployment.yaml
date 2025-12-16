@@ -15,8 +15,11 @@ spec:
     spec:
       containers:
         - name: todo-backend
-          image: akiracry/todo-backend:2.4
+          image: akiracry/todo-backend:2.6
           env:
             - name: PORT
-              value: "3000"
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-backend-config
+                  key: PORT
 

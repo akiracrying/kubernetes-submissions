@@ -15,10 +15,25 @@ spec:
     spec:
       containers:
         - name: the-project
-          image: akiracry/the-project:2.4
+          image: akiracry/the-project:2.6
           env:
             - name: PORT
               value: "3000"
+            - name: IMAGE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: the-project-config
+                  key: IMAGE_URL
+            - name: CACHE_DURATION
+              valueFrom:
+                configMapKeyRef:
+                  name: the-project-config
+                  key: CACHE_DURATION
+            - name: TODO_BACKEND_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: the-project-config
+                  key: TODO_BACKEND_URL
           volumeMounts:
             - name: cache-volume
               mountPath: /cache

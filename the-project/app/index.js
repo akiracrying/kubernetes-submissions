@@ -4,10 +4,11 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = process.env.PORT || 3000;
-const CACHE_DIR = '/cache';
+const CACHE_DIR = process.env.CACHE_DIR || '/cache';
 const IMAGE_FILE = path.join(CACHE_DIR, 'image.jpg');
 const METADATA_FILE = path.join(CACHE_DIR, 'metadata.json');
-const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+const CACHE_DURATION = parseInt(process.env.CACHE_DURATION) || 10 * 60 * 1000; // 10 minutes in milliseconds
+const IMAGE_URL = process.env.IMAGE_URL || 'https://picsum.photos/1200';
 
 // Ensure cache directory exists
 if (!fs.existsSync(CACHE_DIR)) {
@@ -16,7 +17,7 @@ if (!fs.existsSync(CACHE_DIR)) {
 
 function downloadImage() {
   return new Promise((resolve, reject) => {
-    const url = 'https://picsum.photos/1200';
+    const url = IMAGE_URL;
     https.get(url, (response) => {
       if (response.statusCode === 302 || response.statusCode === 301) {
         // Follow redirect
@@ -104,6 +105,7 @@ function getImage() {
 const server = http.createServer(async (req, res) => {
   if (req.url === '/' && req.method === 'GET') {
     const image = await getImage();
+    const TODO_BACKEND_URL = process.env.TODO_BACKEND_URL || '/api/todos';
     
     if (image) {
       res.writeHead(200, { 'Content-Type': 'text/html' });
@@ -187,7 +189,7 @@ const server = http.createServer(async (req, res) => {
               }
             </style>
             <script>
-              const TODO_BACKEND_URL = '/api/todos';
+              const TODO_BACKEND_URL = '${TODO_BACKEND_URL}';
               
               function validateInput(input) {
                 if (input.value.length > 140) {
