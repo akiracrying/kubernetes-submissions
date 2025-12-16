@@ -120,25 +120,36 @@ const server = http.createServer(async (req, res) => {
       try {
         const data = JSON.parse(body);
         const text = data.text || '';
+        const timestamp = new Date().toISOString();
+        
+        // Log every todo request
+        console.log(`[${timestamp}] POST /api/todos - Received todo: "${text}" (length: ${text.length})`);
         
         // Validate: max 140 characters
         if (text.length > 140) {
+          const errorMsg = 'Todo cannot be longer than 140 characters';
+          console.log(`[${timestamp}] POST /api/todos - REJECTED: ${errorMsg}`);
           res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Todo cannot be longer than 140 characters' }));
+          res.end(JSON.stringify({ error: errorMsg }));
           return;
         }
         
         if (text.trim().length === 0) {
+          const errorMsg = 'Todo cannot be empty';
+          console.log(`[${timestamp}] POST /api/todos - REJECTED: ${errorMsg}`);
           res.writeHead(400, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Todo cannot be empty' }));
+          res.end(JSON.stringify({ error: errorMsg }));
           return;
         }
         
         const newTodo = await createTodo(text);
+        console.log(`[${timestamp}] POST /api/todos - ACCEPTED: Created todo with id ${newTodo.id}`);
         
         res.writeHead(201, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(newTodo));
       } catch (error) {
+        const timestamp = new Date().toISOString();
+        console.log(`[${timestamp}] POST /api/todos - ERROR: ${error.message || 'Invalid JSON'}`);
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: error.message || 'Invalid JSON' }));
       }
