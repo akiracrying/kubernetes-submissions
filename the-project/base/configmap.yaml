@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: the-project-config
+  namespace: project
+data:
+  IMAGE_URL: "https://picsum.photos/1200"
+  CACHE_DURATION: "600000"
+  TODO_BACKEND_URL: "/api/todos"
+
