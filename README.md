@@ -40,6 +40,7 @@ Submissions for k8s MOOC course
 - [3.7](../../tree/3.7/the-project)
 - [3.8](../../tree/3.8/the-project)
 - [3.9](../../tree/3.9/the-project)
+- [3.10](../../tree/3.10/the-project)
 
 ## Exercise 3.9: DBaaS vs DIY - Pros/Cons Comparison
 

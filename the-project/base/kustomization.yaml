@@ -15,4 +15,5 @@ resources:
   - postgres-service.yaml
   - postgres-configmap.yaml
   - postgres-secret.yaml
+  - postgres-backup-cronjob.yaml
 
