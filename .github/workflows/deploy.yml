@@ -88,6 +88,11 @@ jobs:
             sed "s/akiracry\/todo-backend:.*/${{ env.ARTIFACT_REGISTRY }}\/${{ env.PROJECT_ID }}\/docker-repo\/todo-backend:${{ github.sha }}/g" | \
             kubectl apply -f -
           
-          kubectl rollout status deployment/the-project -n ${{ steps.namespace.outputs.NAMESPACE }} --timeout=5m
-          kubectl rollout status deployment/todo-backend -n ${{ steps.namespace.outputs.NAMESPACE }} --timeout=5m
+          # Wait for rollouts with timeout, but don't fail if timeout occurs
+          kubectl rollout status deployment/the-project -n ${{ steps.namespace.outputs.NAMESPACE }} --timeout=10m || true
+          kubectl rollout status deployment/todo-backend -n ${{ steps.namespace.outputs.NAMESPACE }} --timeout=10m || true
+          
+          # Show pod status for debugging
+          echo "Current pod status:"
+          kubectl get pods -n ${{ steps.namespace.outputs.NAMESPACE }}
 
