@@ -2,8 +2,7 @@ name: Deploy to GKE
 
 on:
   push:
-    branches:
-      - main
+    branches: ['**']
   workflow_dispatch:
 
 env:
@@ -66,13 +65,29 @@ jobs:
             --zone ${{ env.GKE_ZONE }} \
             --project ${{ env.PROJECT_ID }}
 
+      - name: Determine namespace
+        id: namespace
+        run: |
+          if [ "${{ github.ref_name }}" == "main" ]; then
+            echo "NAMESPACE=project" >> $GITHUB_OUTPUT
+          else
+            echo "NAMESPACE=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+          echo "Deploying to namespace: ${{ steps.namespace.outputs.NAMESPACE }}"
+
+      - name: Create namespace if not exists
+        run: |
+          kubectl create namespace ${{ steps.namespace.outputs.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Deploy to GKE
         run: |
           kubectl kustomize the-project/overlays/gke | \
-            sed "s|akiracry/the-project:.*|${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/the-project:${{ github.sha }}|g" | \
-            sed "s|akiracry/todo-backend:.*|${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/todo-backend:${{ github.sha }}|g" | \
+            sed "s/namespace: project/namespace: ${{ steps.namespace.outputs.NAMESPACE }}/g" | \
+            sed "s/  namespace: project/  namespace: ${{ steps.namespace.outputs.NAMESPACE }}/g" | \
+            sed "s/akiracry\/the-project:.*/${{ env.ARTIFACT_REGISTRY }}\/${{ env.PROJECT_ID }}\/docker-repo\/the-project:${{ github.sha }}/g" | \
+            sed "s/akiracry\/todo-backend:.*/${{ env.ARTIFACT_REGISTRY }}\/${{ env.PROJECT_ID }}\/docker-repo\/todo-backend:${{ github.sha }}/g" | \
             kubectl apply -f -
           
-          kubectl rollout status deployment/the-project -n project
-          kubectl rollout status deployment/todo-backend -n project
+          kubectl rollout status deployment/the-project -n ${{ steps.namespace.outputs.NAMESPACE }} --timeout=5m
+          kubectl rollout status deployment/todo-backend -n ${{ steps.namespace.outputs.NAMESPACE }} --timeout=5m
 
