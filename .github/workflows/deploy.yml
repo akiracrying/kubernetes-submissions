@@ -47,17 +47,30 @@ jobs:
         run: |
           docker build -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/the-project:${{ github.sha }} \
             -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/the-project:latest \
+            -t akiracry/the-project:${{ github.sha }} \
+            -t akiracry/the-project:latest \
             ./the-project
           docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/the-project:${{ github.sha }}
           docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/the-project:latest
+          
+          # Push to Docker Hub
+          echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+          docker push akiracry/the-project:${{ github.sha }}
+          docker push akiracry/the-project:latest
 
       - name: Build and push todo-backend image
         run: |
           docker build -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/todo-backend:${{ github.sha }} \
             -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/todo-backend:latest \
+            -t akiracry/todo-backend:${{ github.sha }} \
+            -t akiracry/todo-backend:latest \
             ./todo-backend
           docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/todo-backend:${{ github.sha }}
           docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/todo-backend:latest
+          
+          # Push to Docker Hub
+          docker push akiracry/todo-backend:${{ github.sha }}
+          docker push akiracry/todo-backend:latest
 
       - name: Get GKE credentials
         run: |
