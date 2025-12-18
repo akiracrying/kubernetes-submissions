@@ -44,6 +44,9 @@ Submissions for k8s MOOC course
 - [3.11](../../tree/3.11/the-project)
 - [3.12](../../tree/3.12/screenshots)
 
+### Chapter 4
+- [4.1](../../tree/4.1/ping-pong)
+
 ## Exercise 3.9: DBaaS vs DIY - Pros/Cons Comparison
 
 ### Database as a Service (DBaaS) - Google Cloud SQL

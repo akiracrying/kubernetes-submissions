@@ -29,4 +29,13 @@ spec:
               value: "postgres"
             - name: DB_NAME
               value: "pingpong"
+          readinessProbe:
+            httpGet:
+              path: /pings
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
 
