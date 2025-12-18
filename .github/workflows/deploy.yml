@@ -1,0 +1,73 @@
+name: Deploy to GKE
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: dotted-byway-481522-f5
+  GKE_CLUSTER: my-k8s-cluster
+  GKE_ZONE: europe-north1
+  ARTIFACT_REGISTRY: europe-north1-docker.pkg.dev
+  SERVICE_NAME: the-project
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }}
+
+      - name: Create Artifact Registry repository (if not exists)
+        run: |
+          gcloud artifacts repositories create docker-repo \
+            --repository-format=docker \
+            --location=${{ env.GKE_ZONE }} \
+            --description="Docker repository" || true
+
+      - name: Build and push the-project image
+        run: |
+          docker build -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/the-project:${{ github.sha }} \
+            -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/the-project:latest \
+            ./the-project
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/the-project:${{ github.sha }}
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/the-project:latest
+
+      - name: Build and push todo-backend image
+        run: |
+          docker build -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/todo-backend:${{ github.sha }} \
+            -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/todo-backend:latest \
+            ./todo-backend
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/todo-backend:${{ github.sha }}
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/todo-backend:latest
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+            --zone ${{ env.GKE_ZONE }} \
+            --project ${{ env.PROJECT_ID }}
+
+      - name: Deploy to GKE
+        run: |
+          kubectl kustomize the-project/overlays/gke | \
+            sed "s|akiracry/the-project:.*|${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/the-project:${{ github.sha }}|g" | \
+            sed "s|akiracry/todo-backend:.*|${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/todo-backend:${{ github.sha }}|g" | \
+            kubectl apply -f -
+          
+          kubectl rollout status deployment/the-project -n project
+          kubectl rollout status deployment/todo-backend -n project
+

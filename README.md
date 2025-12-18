@@ -36,3 +36,4 @@ Submissions for k8s MOOC course
 - [3.3](../../tree/3.3/log_output)
 - [3.4](../../tree/3.4/ping-pong)
 - [3.5](../../tree/3.5/the-project)
+- [3.6](../../tree/3.6/the-project)
