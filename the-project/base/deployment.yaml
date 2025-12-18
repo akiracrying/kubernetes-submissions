@@ -34,6 +34,13 @@ spec:
                 configMapKeyRef:
                   name: the-project-config
                   key: TODO_BACKEND_URL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
           volumeMounts:
             - name: cache-volume
               mountPath: /cache
