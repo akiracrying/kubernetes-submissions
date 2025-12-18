@@ -99,6 +99,13 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Health check endpoint for Ingress
+  if (req.url === '/' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('OK');
+    return;
+  }
+
   // Handle /api/todos endpoint (from Ingress) or /todos (direct access)
   const isTodosEndpoint = req.url === '/todos' || req.url.startsWith('/api/todos');
   
