@@ -1,0 +1,59 @@
+name: Delete Environment
+
+on:
+  delete:
+    branches: ['**']
+
+env:
+  PROJECT_ID: dotted-byway-481522-f5
+  GKE_CLUSTER: my-k8s-cluster
+  GKE_ZONE: europe-north1
+
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GKE_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: 'gke-gcloud-auth-plugin'
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Determine namespace
+        id: namespace
+        run: |
+          BRANCH_NAME="${{ github.event.ref }}"
+          # Remove 'refs/heads/' prefix if present
+          BRANCH_NAME="${BRANCH_NAME#refs/heads/}"
+          
+          if [ "$BRANCH_NAME" == "main" ]; then
+            echo "NAMESPACE=project" >> $GITHUB_OUTPUT
+          else
+            echo "NAMESPACE=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          fi
+          echo "Deleting namespace: ${{ steps.namespace.outputs.NAMESPACE }}"
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+            --zone ${{ env.GKE_ZONE }} \
+            --project ${{ env.PROJECT_ID }}
+
+      - name: Delete namespace
+        run: |
+          if kubectl get namespace ${{ steps.namespace.outputs.NAMESPACE }} &>/dev/null; then
+            echo "Deleting namespace ${{ steps.namespace.outputs.NAMESPACE }}..."
+            kubectl delete namespace ${{ steps.namespace.outputs.NAMESPACE }} --wait=true --timeout=5m
+            echo "Namespace ${{ steps.namespace.outputs.NAMESPACE }} deleted successfully"
+          else
+            echo "Namespace ${{ steps.namespace.outputs.NAMESPACE }} does not exist, skipping deletion"
+          fi
+

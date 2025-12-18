@@ -38,3 +38,4 @@ Submissions for k8s MOOC course
 - [3.5](../../tree/3.5/the-project)
 - [3.6](../../tree/3.6/the-project)
 - [3.7](../../tree/3.7/the-project)
+- [3.8](../../tree/3.8/the-project)
