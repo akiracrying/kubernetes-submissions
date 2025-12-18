@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: the-project
-          image: akiracry/the-project:2.6
+          image: akiracry/the-project:4.2
           env:
             - name: PORT
               value: "3000"
