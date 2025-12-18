@@ -46,6 +46,7 @@ Submissions for k8s MOOC course
 
 ### Chapter 4
 - [4.1](../../tree/4.1/ping-pong)
+- [4.2](../../tree/4.2/the-project)
 
 ## Exercise 3.9: DBaaS vs DIY - Pros/Cons Comparison
 

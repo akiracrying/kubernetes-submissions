@@ -9,6 +9,7 @@ const IMAGE_FILE = path.join(CACHE_DIR, 'image.jpg');
 const METADATA_FILE = path.join(CACHE_DIR, 'metadata.json');
 const CACHE_DURATION = parseInt(process.env.CACHE_DURATION) || 10 * 60 * 1000; // 10 minutes in milliseconds
 const IMAGE_URL = process.env.IMAGE_URL || 'https://picsum.photos/1200';
+const TODO_BACKEND_URL = process.env.TODO_BACKEND_URL || '/api/todos';
 
 // Ensure cache directory exists
 if (!fs.existsSync(CACHE_DIR)) {
@@ -102,10 +103,54 @@ function getImage() {
   });
 }
 
+// Health check function - checks if todo-backend is accessible (which means DB is connected)
+async function checkHealth() {
+  return new Promise((resolve) => {
+    const options = {
+      hostname: 'todo-backend',
+      port: 3000,
+      path: '/api/todos',
+      method: 'GET',
+      timeout: 2000
+    };
+    
+    const req = http.request(options, (res) => {
+      if (res.statusCode === 200) {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    });
+    
+    req.on('error', () => {
+      resolve(false);
+    });
+    
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(false);
+    });
+    
+    req.end();
+  });
+}
+
 const server = http.createServer(async (req, res) => {
+  // Health/readiness endpoint
+  if (req.url === '/health' && req.method === 'GET') {
+    const isHealthy = await checkHealth();
+    if (isHealthy) {
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end('OK');
+    } else {
+      res.writeHead(503, { 'Content-Type': 'text/plain' });
+      res.end('Service Unavailable');
+    }
+    return;
+  }
+  
   if (req.url === '/' && req.method === 'GET') {
     const image = await getImage();
-    const TODO_BACKEND_URL = process.env.TODO_BACKEND_URL || '/api/todos';
     
     if (image) {
       res.writeHead(200, { 'Content-Type': 'text/html' });
