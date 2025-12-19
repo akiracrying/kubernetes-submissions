@@ -154,7 +154,7 @@ async function start() {
 }
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('SIGTERM received, closing NATS connection');
   if (natsConnection) {
     await natsConnection.close();
