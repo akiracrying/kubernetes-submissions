@@ -5,7 +5,12 @@ on:
     paths:
       - 'log_output/**'
       - '.github/workflows/log-output-gitops.yml'
+    branches:
+      - main
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 env:
   PROJECT_ID: dotted-byway-481522-f5
