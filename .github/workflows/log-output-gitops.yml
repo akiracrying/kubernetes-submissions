@@ -24,6 +24,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          persist-credentials: true
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -92,12 +96,11 @@ jobs:
         run: |
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git checkout -b ${{ github.ref_name }} || git checkout ${{ github.ref_name }}
           git add log_output/base/kustomization.yaml
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Update log-output images to ${{ github.sha }}"
-            git push origin ${{ github.ref_name }}
+            git commit -m "Update log-output images to ${{ github.sha }} [skip ci]"
+            git push
           fi
 
