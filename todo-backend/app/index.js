@@ -1,5 +1,6 @@
 const http = require('http');
 const { Client } = require('pg');
+const NATS = require('nats');
 
 const PORT = process.env.PORT || 3000;
 const DB_HOST = process.env.DB_HOST || 'postgres-project';
@@ -7,6 +8,7 @@ const DB_PORT = process.env.DB_PORT || '5432';
 const DB_USER = process.env.DB_USER || 'postgres';
 const DB_PASSWORD = process.env.DB_PASSWORD || 'postgres';
 const DB_NAME = process.env.DB_NAME || 'todos';
+const NATS_URL = process.env.NATS_URL || 'nats://nats:4222';
 
 const dbConfig = {
   host: DB_HOST,
@@ -17,6 +19,59 @@ const dbConfig = {
 };
 
 let dbClient = null;
+let natsConnection = null;
+
+// Initialize NATS connection
+function initNATS() {
+  return new Promise((resolve) => {
+    try {
+      const nc = NATS.connect({
+        url: NATS_URL,
+        reconnect: true,
+        maxReconnectAttempts: -1,
+        reconnectTimeWait: 2000
+      });
+
+      nc.on('connect', () => {
+        console.log('Connected to NATS');
+        natsConnection = nc;
+        resolve(nc);
+      });
+
+      nc.on('error', (err) => {
+        console.error('NATS connection error:', err);
+      });
+
+      nc.on('reconnect', () => {
+        console.log('Reconnected to NATS');
+      });
+
+      nc.on('close', () => {
+        console.log('NATS connection closed');
+        natsConnection = null;
+      });
+    } catch (error) {
+      console.error('Error initializing NATS:', error);
+      // Don't fail if NATS is not available
+      resolve(null);
+    }
+  });
+}
+
+// Publish message to NATS
+function publishToNATS(message) {
+  if (natsConnection && natsConnection.connected) {
+    try {
+      const payload = JSON.stringify({ message: message });
+      natsConnection.publish('todos', payload);
+      console.log('Published to NATS:', message);
+    } catch (error) {
+      console.error('Error publishing to NATS:', error);
+    }
+  } else {
+    console.log('NATS not connected, skipping publish');
+  }
+}
 
 async function initDatabase() {
   try {
@@ -207,6 +262,9 @@ const server = http.createServer(async (req, res) => {
         const newTodo = await createTodo(text);
         console.log(`[${timestamp}] POST /api/todos - ACCEPTED: Created todo with id ${newTodo.id}`);
         
+        // Publish to NATS
+        publishToNATS('A todo was created');
+        
         res.writeHead(201, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(newTodo));
       } catch (error) {
@@ -231,6 +289,11 @@ const server = http.createServer(async (req, res) => {
         const updatedTodo = await updateTodo(todoId, data);
         console.log(`[${timestamp}] PUT /api/todos/${todoId} - SUCCESS: Updated todo`);
         
+        // Publish to NATS if todo was marked as done
+        if (data.done) {
+          publishToNATS('A todo was updated');
+        }
+        
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(updatedTodo));
       } catch (error) {
@@ -252,8 +315,9 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-// Initialize database on startup
+// Initialize database and NATS on startup
 initDatabase();
+initNATS();
 
 server.listen(PORT, () => {
   console.log(`Todo backend server started in port ${PORT}`);
@@ -263,6 +327,9 @@ server.listen(PORT, () => {
 process.on('SIGTERM', async () => {
   if (dbClient) {
     await dbClient.end();
+  }
+  if (natsConnection) {
+    natsConnection.close();
   }
   process.exit(0);
 });

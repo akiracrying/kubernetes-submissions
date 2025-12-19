@@ -47,6 +47,8 @@ spec:
                 secretKeyRef:
                   name: todo-backend-secret
                   key: DB_PASSWORD
+            - name: NATS_URL
+              value: "nats://nats:4222"
           resources:
             requests:
               cpu: 100m

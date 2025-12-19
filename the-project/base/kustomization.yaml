@@ -11,6 +11,11 @@ resources:
   - todo-backend-service.yaml
   - todo-backend-configmap.yaml
   - todo-backend-secret.yaml
+  - broadcaster-deployment.yaml
+  - broadcaster-service.yaml
+  - broadcaster-secret.yaml
+  - nats-deployment.yaml
+  - nats-service.yaml
   - postgres-statefulset.yaml
   - postgres-service.yaml
   - postgres-configmap.yaml
