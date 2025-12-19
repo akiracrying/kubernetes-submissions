@@ -29,8 +29,15 @@ async function initDatabase() {
       CREATE TABLE IF NOT EXISTS todos (
         id SERIAL PRIMARY KEY,
         text VARCHAR(140) NOT NULL,
+        done BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+    
+    // Add done column if it doesn't exist (for existing databases)
+    await dbClient.query(`
+      ALTER TABLE todos 
+      ADD COLUMN IF NOT EXISTS done BOOLEAN DEFAULT FALSE
     `);
     
     // Initialize with default todos if table is empty
@@ -57,10 +64,11 @@ async function getTodos() {
     if (!dbClient) {
       await initDatabase();
     }
-    const result = await dbClient.query('SELECT id, text FROM todos ORDER BY id');
+    const result = await dbClient.query('SELECT id, text, done FROM todos ORDER BY id');
     return result.rows.map(row => ({
       id: row.id,
-      text: row.text
+      text: row.text,
+      done: row.done || false
     }));
   } catch (error) {
     console.error('Error getting todos:', error);
@@ -74,12 +82,13 @@ async function createTodo(text) {
       await initDatabase();
     }
     const result = await dbClient.query(
-      'INSERT INTO todos (text) VALUES ($1) RETURNING id, text',
+      'INSERT INTO todos (text) VALUES ($1) RETURNING id, text, done',
       [text.trim()]
     );
     return {
       id: result.rows[0].id,
-      text: result.rows[0].text
+      text: result.rows[0].text,
+      done: result.rows[0].done || false
     };
   } catch (error) {
     console.error('Error creating todo:', error);
@@ -87,10 +96,52 @@ async function createTodo(text) {
   }
 }
 
+async function updateTodo(id, data) {
+  try {
+    if (!dbClient) {
+      await initDatabase();
+    }
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+    
+    if (data.hasOwnProperty('done')) {
+      updates.push(`done = $${paramIndex++}`);
+      values.push(data.done);
+    }
+    
+    if (data.hasOwnProperty('text')) {
+      updates.push(`text = $${paramIndex++}`);
+      values.push(data.text.trim());
+    }
+    
+    if (updates.length === 0) {
+      throw new Error('No fields to update');
+    }
+    
+    values.push(id);
+    const query = `UPDATE todos SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING id, text, done`;
+    const result = await dbClient.query(query, values);
+    
+    if (result.rows.length === 0) {
+      throw new Error('Todo not found');
+    }
+    
+    return {
+      id: result.rows[0].id,
+      text: result.rows[0].text,
+      done: result.rows[0].done || false
+    };
+  } catch (error) {
+    console.error('Error updating todo:', error);
+    throw error;
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
@@ -108,6 +159,10 @@ const server = http.createServer(async (req, res) => {
 
   // Handle /api/todos endpoint (from Ingress) or /todos (direct access)
   const isTodosEndpoint = req.url === '/todos' || req.url.startsWith('/api/todos');
+  
+  // Parse todo ID from URL (PUT /todos/:id or PUT /api/todos/:id)
+  const todosIdMatch = req.url.match(/^\/(?:api\/)?todos\/(\d+)$/);
+  const todoId = todosIdMatch ? parseInt(todosIdMatch[1]) : null;
   
   if (isTodosEndpoint && req.method === 'GET') {
     try {
@@ -159,6 +214,36 @@ const server = http.createServer(async (req, res) => {
         console.log(`[${timestamp}] POST /api/todos - ERROR: ${error.message || 'Invalid JSON'}`);
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: error.message || 'Invalid JSON' }));
+      }
+    });
+  } else if (todoId && req.method === 'PUT') {
+    // PUT /todos/:id or PUT /api/todos/:id
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', async () => {
+      try {
+        const data = JSON.parse(body);
+        const timestamp = new Date().toISOString();
+        console.log(`[${timestamp}] PUT /api/todos/${todoId} - Updating todo`);
+        
+        const updatedTodo = await updateTodo(todoId, data);
+        console.log(`[${timestamp}] PUT /api/todos/${todoId} - SUCCESS: Updated todo`);
+        
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(updatedTodo));
+      } catch (error) {
+        const timestamp = new Date().toISOString();
+        console.log(`[${timestamp}] PUT /api/todos/${todoId} - ERROR: ${error.message}`);
+        
+        if (error.message === 'Todo not found') {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Todo not found' }));
+        } else {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: error.message || 'Invalid JSON' }));
+        }
       }
     });
   } else {

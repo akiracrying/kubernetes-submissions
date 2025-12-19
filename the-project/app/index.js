@@ -231,6 +231,38 @@ const server = http.createServer(async (req, res) => {
                 background-color: #f9f9f9;
                 border-left: 3px solid #4CAF50;
                 border-radius: 4px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              }
+              .done-item {
+                padding: 10px;
+                margin-bottom: 8px;
+                background-color: #f0f0f0;
+                border-left: 3px solid #999;
+                border-radius: 4px;
+              }
+              .mark-done-button {
+                padding: 5px 15px;
+                font-size: 14px;
+                background-color: #2196F3;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+              }
+              .mark-done-button:hover {
+                background-color: #0b7dda;
+              }
+              .todo-section-title {
+                font-size: 18px;
+                font-weight: bold;
+                margin-top: 20px;
+                margin-bottom: 10px;
+                color: #333;
+              }
+              .todo-list-container {
+                margin-bottom: 30px;
               }
             </style>
             <script>
@@ -255,13 +287,63 @@ const server = http.createServer(async (req, res) => {
               
               function renderTodos(todos) {
                 const todoList = document.getElementById('todo-list');
+                const doneList = document.getElementById('done-list');
+                
+                // Clear both lists
                 todoList.innerHTML = '';
-                todos.forEach(todo => {
+                doneList.innerHTML = '';
+                
+                // Separate todos into active and done
+                const activeTodos = todos.filter(todo => !todo.done);
+                const doneTodos = todos.filter(todo => todo.done);
+                
+                // Render active todos with "Mark as done" button
+                activeTodos.forEach(todo => {
                   const li = document.createElement('li');
                   li.className = 'todo-item';
-                  li.textContent = todo.text;
+                  
+                  const textSpan = document.createElement('span');
+                  textSpan.textContent = todo.text;
+                  
+                  const button = document.createElement('button');
+                  button.className = 'mark-done-button';
+                  button.textContent = 'Mark as done';
+                  button.onclick = () => markAsDone(todo.id);
+                  
+                  li.appendChild(textSpan);
+                  li.appendChild(button);
                   todoList.appendChild(li);
                 });
+                
+                // Render done todos without button
+                doneTodos.forEach(todo => {
+                  const li = document.createElement('li');
+                  li.className = 'done-item';
+                  li.textContent = todo.text;
+                  doneList.appendChild(li);
+                });
+              }
+              
+              async function markAsDone(id) {
+                try {
+                  const response = await fetch(TODO_BACKEND_URL + '/' + id, {
+                    method: 'PUT',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ done: true })
+                  });
+                  
+                  if (response.ok) {
+                    loadTodos();
+                  } else {
+                    const error = await response.json();
+                    alert(error.error || 'Error marking todo as done');
+                  }
+                } catch (error) {
+                  console.error('Error marking todo as done:', error);
+                  alert('Error marking todo as done');
+                }
               }
               
               async function createTodo() {
@@ -326,9 +408,17 @@ const server = http.createServer(async (req, res) => {
                   />
                   <button type="button" class="create-button">Create todo</button>
                 </form>
-                <ul class="todo-list" id="todo-list">
-                  <li class="todo-item">Loading todos...</li>
-                </ul>
+                <div class="todo-list-container">
+                  <h2 class="todo-section-title">Todo</h2>
+                  <ul class="todo-list" id="todo-list">
+                    <li class="todo-item">Loading todos...</li>
+                  </ul>
+                </div>
+                <div class="todo-list-container">
+                  <h2 class="todo-section-title">Done</h2>
+                  <ul class="todo-list" id="done-list">
+                  </ul>
+                </div>
               </div>
               <div class="footer">
                 <p>DevOps with Kubernetes 2025</p>
