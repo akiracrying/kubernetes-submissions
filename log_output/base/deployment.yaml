@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-output
+  namespace: exercises
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: log-output
+  template:
+    metadata:
+      labels:
+        app: log-output
+    spec:
+      containers:
+        - name: writer
+          image: akiracry/log-output-writer:3.2
+          volumeMounts:
+            - name: shared-volume
+              mountPath: /shared
+        - name: reader
+          image: akiracry/log-output-reader:3.2
+          env:
+            - name: PORT
+              value: "3000"
+            - name: PING_PONG_SERVICE
+              value: "ping-pong"
+            - name: PING_PONG_PORT
+              value: "3000"
+            - name: MESSAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: log-output-config
+                  key: MESSAGE
+          volumeMounts:
+            - name: shared-volume
+              mountPath: /shared
+            - name: config-volume
+              mountPath: /config
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+      volumes:
+        - name: shared-volume
+          persistentVolumeClaim:
+            claimName: shared-pvc
+        - name: config-volume
+          configMap:
+            name: log-output-config
+
