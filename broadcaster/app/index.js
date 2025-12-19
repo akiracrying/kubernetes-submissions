@@ -1,6 +1,7 @@
 const http = require('http');
 const https = require('https');
-const NATS = require('nats');
+const { connect, StringCodec } = require('nats');
+const NATS = { connect, StringCodec };
 
 const PORT = process.env.PORT || 3000;
 const NATS_URL = process.env.NATS_URL || 'nats://nats:4222';
@@ -11,42 +12,33 @@ const QUEUE_GROUP = 'broadcaster-queue';
 let natsConnection = null;
 
 // Initialize NATS connection
-function initNATS() {
-  return new Promise((resolve, reject) => {
-    try {
-      const nc = NATS.connect({
-        url: NATS_URL,
-        reconnect: true,
-        maxReconnectAttempts: -1,
-        reconnectTimeWait: 2000
-      });
+async function initNATS() {
+  try {
+    const nc = await connect({
+      servers: NATS_URL,
+      reconnect: true,
+      maxReconnectAttempts: -1,
+      reconnectTimeWait: 2000
+    });
 
-      nc.on('connect', () => {
-        console.log('Connected to NATS');
-        natsConnection = nc;
-        resolve(nc);
-      });
+    console.log('Connected to NATS');
+    natsConnection = nc;
 
-      nc.on('error', (err) => {
-        console.error('NATS connection error:', err);
-        if (!natsConnection) {
-          reject(err);
+    (async () => {
+      for await (const status of nc.status()) {
+        if (status.type === 'reconnect') {
+          console.log('Reconnected to NATS');
         }
-      });
+      }
+    })().catch(() => {
+      // Ignore errors in status monitoring
+    });
 
-      nc.on('reconnect', () => {
-        console.log('Reconnected to NATS');
-      });
-
-      nc.on('close', () => {
-        console.log('NATS connection closed');
-        natsConnection = null;
-      });
-    } catch (error) {
-      console.error('Error initializing NATS:', error);
-      reject(error);
-    }
-  });
+    return nc;
+  } catch (error) {
+    console.error('Error initializing NATS:', error);
+    throw error;
+  }
 }
 
 // Subscribe to NATS messages
@@ -58,16 +50,23 @@ function subscribeToNATS() {
 
   // Use queue group to ensure messages are load-balanced across replicas
   // This prevents duplicate messages when multiple broadcaster instances are running
-  natsConnection.subscribe('todos', QUEUE_GROUP, (msg) => {
-    try {
-      const data = JSON.parse(msg);
-      console.log('Received NATS message:', data);
-      
-      // Send message to Telegram
-      sendToTelegram(data.message || 'A todo was created/updated');
-    } catch (error) {
-      console.error('Error processing NATS message:', error);
+  const sc = StringCodec();
+  const sub = natsConnection.subscribe('todos', { queue: QUEUE_GROUP });
+  
+  (async () => {
+    for await (const msg of sub) {
+      try {
+        const data = JSON.parse(sc.decode(msg.data));
+        console.log('Received NATS message:', data);
+        
+        // Send message to Telegram
+        sendToTelegram(data.message || 'A todo was created/updated');
+      } catch (error) {
+        console.error('Error processing NATS message:', error);
+      }
     }
+  })().catch((error) => {
+    console.error('Error in subscription loop:', error);
   });
 
   console.log(`Subscribed to NATS subject 'todos' with queue group '${QUEUE_GROUP}'`);
@@ -158,17 +157,17 @@ async function start() {
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, closing NATS connection');
   if (natsConnection) {
-    natsConnection.close();
+    await natsConnection.close();
   }
   server.close(() => {
     process.exit(0);
   });
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('SIGINT received, closing NATS connection');
   if (natsConnection) {
-    natsConnection.close();
+    await natsConnection.close();
   }
   server.close(() => {
     process.exit(0);

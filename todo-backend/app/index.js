@@ -1,6 +1,7 @@
 const http = require('http');
 const { Client } = require('pg');
-const NATS = require('nats');
+const { connect, StringCodec } = require('nats');
+const NATS = { connect, StringCodec };
 
 const PORT = process.env.PORT || 3000;
 const DB_HOST = process.env.DB_HOST || 'postgres-project';
@@ -22,48 +23,43 @@ let dbClient = null;
 let natsConnection = null;
 
 // Initialize NATS connection
-function initNATS() {
-  return new Promise((resolve) => {
-    try {
-      const nc = NATS.connect({
-        url: NATS_URL,
-        reconnect: true,
-        maxReconnectAttempts: -1,
-        reconnectTimeWait: 2000
-      });
+async function initNATS() {
+  try {
+    const nc = await connect({
+      servers: NATS_URL,
+      reconnect: true,
+      maxReconnectAttempts: -1,
+      reconnectTimeWait: 2000
+    });
 
-      nc.on('connect', () => {
-        console.log('Connected to NATS');
-        natsConnection = nc;
-        resolve(nc);
-      });
+    console.log('Connected to NATS');
+    natsConnection = nc;
 
-      nc.on('error', (err) => {
-        console.error('NATS connection error:', err);
-      });
+    (async () => {
+      for await (const status of nc.status()) {
+        if (status.type === 'reconnect') {
+          console.log('Reconnected to NATS');
+        }
+      }
+    })().catch(() => {
+      // Ignore errors in status monitoring
+    });
 
-      nc.on('reconnect', () => {
-        console.log('Reconnected to NATS');
-      });
-
-      nc.on('close', () => {
-        console.log('NATS connection closed');
-        natsConnection = null;
-      });
-    } catch (error) {
-      console.error('Error initializing NATS:', error);
-      // Don't fail if NATS is not available
-      resolve(null);
-    }
-  });
+    return nc;
+  } catch (error) {
+    console.error('Error initializing NATS:', error);
+    // Don't fail if NATS is not available
+    return null;
+  }
 }
 
 // Publish message to NATS
 function publishToNATS(message) {
-  if (natsConnection && natsConnection.connected) {
+  if (natsConnection && !natsConnection.closed()) {
     try {
+      const sc = StringCodec();
       const payload = JSON.stringify({ message: message });
-      natsConnection.publish('todos', payload);
+      natsConnection.publish('todos', sc.encode(payload));
       console.log('Published to NATS:', message);
     } catch (error) {
       console.error('Error publishing to NATS:', error);
@@ -329,7 +325,7 @@ process.on('SIGTERM', async () => {
     await dbClient.end();
   }
   if (natsConnection) {
-    natsConnection.close();
+    await natsConnection.close();
   }
   process.exit(0);
 });
