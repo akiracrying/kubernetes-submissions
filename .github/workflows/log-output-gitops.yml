@@ -84,9 +84,15 @@ jobs:
           kustomize edit set image akiracry/log-output-reader=akiracry/log-output-reader:${{ github.sha }}
 
       - name: Commit and push changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Update log-output images to ${{ github.sha }}"
-          file_pattern: 'log_output/base/kustomization.yaml'
-          skip_dirty_check: false
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git checkout -b ${{ github.ref_name }} || git checkout ${{ github.ref_name }}
+          git add log_output/base/kustomization.yaml
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update log-output images to ${{ github.sha }}"
+            git push origin ${{ github.ref_name }}
+          fi
 
