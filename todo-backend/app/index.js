@@ -259,6 +259,7 @@ const server = http.createServer(async (req, res) => {
         console.log(`[${timestamp}] POST /api/todos - ACCEPTED: Created todo with id ${newTodo.id}`);
         
         // Publish to NATS
+        console.log(`[${timestamp}] Publishing to NATS: A todo was created`);
         publishToNATS('A todo was created');
         
         res.writeHead(201, { 'Content-Type': 'application/json' });

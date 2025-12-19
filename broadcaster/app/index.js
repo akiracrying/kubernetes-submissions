@@ -76,8 +76,12 @@ function subscribeToNATS() {
 function sendToTelegram(message) {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
     console.error('Telegram credentials not configured');
+    console.error(`TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN ? 'SET' : 'NOT SET'}`);
+    console.error(`TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID ? 'SET' : 'NOT SET'}`);
     return;
   }
+  
+  console.log(`Sending message to Telegram: "${message}"`);
 
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
   const payload = JSON.stringify({
@@ -103,6 +107,12 @@ function sendToTelegram(message) {
         console.log('Message sent to Telegram successfully');
       } else {
         console.error('Error sending to Telegram:', res.statusCode, data);
+        try {
+          const errorData = JSON.parse(data);
+          console.error('Telegram API error:', errorData);
+        } catch (e) {
+          console.error('Raw response:', data);
+        }
       }
     });
   });
