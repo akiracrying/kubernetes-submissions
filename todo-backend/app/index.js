@@ -296,10 +296,9 @@ const server = http.createServer(async (req, res) => {
         const updatedTodo = await updateTodo(todoId, data);
         console.log(`[${timestamp}] PUT /api/todos/${todoId} - SUCCESS: Updated todo`);
         
-        // Publish to NATS if todo was marked as done
-        if (data.done) {
-          publishToNATS('A todo was updated');
-        }
+        // Publish to NATS when todo is updated
+        console.log(`[${timestamp}] Publishing to NATS: A todo was updated`);
+        publishToNATS('updated', updatedTodo);
         
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(updatedTodo));

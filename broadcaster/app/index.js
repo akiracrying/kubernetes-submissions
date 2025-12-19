@@ -54,19 +54,47 @@ function subscribeToNATS() {
   const sub = natsConnection.subscribe('todos', { queue: QUEUE_GROUP });
   
   (async () => {
+    console.log('Starting NATS message subscription loop...');
     for await (const msg of sub) {
       try {
-        const data = JSON.parse(sc.decode(msg.data));
-        console.log('Received NATS message:', data);
+        console.log('Received raw NATS message');
+        const decoded = sc.decode(msg.data);
+        console.log('Decoded message:', decoded);
+        const data = JSON.parse(decoded);
+        console.log('Parsed NATS message:', data);
+        
+        // Format message with todo details
+        let message = '';
+        if (data.action === 'created') {
+          message = `A task was created:\n\n`;
+        } else if (data.action === 'updated') {
+          message = `A task was updated:\n\n`;
+        } else {
+          message = `A todo event occurred:\n\n`;
+        }
+        
+        if (data.todo) {
+          const todo = data.todo;
+          message += `Task: ${todo.text}\n`;
+          message += `Done: ${todo.done ? 'Yes' : 'No'}\n`;
+          message += `ID: ${todo.id}\n`;
+          if (data.timestamp) {
+            message += `Time: ${new Date(data.timestamp).toLocaleString()}`;
+          }
+        } else {
+          message += data.message || 'No details available';
+        }
         
         // Send message to Telegram
-        sendToTelegram(data.message || 'A todo was created/updated');
+        sendToTelegram(message);
       } catch (error) {
         console.error('Error processing NATS message:', error);
+        console.error('Error stack:', error.stack);
       }
     }
   })().catch((error) => {
     console.error('Error in subscription loop:', error);
+    console.error('Error stack:', error.stack);
   });
 
   console.log(`Subscribed to NATS subject 'todos' with queue group '${QUEUE_GROUP}'`);
