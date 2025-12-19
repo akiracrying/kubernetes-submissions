@@ -13,7 +13,7 @@ resources:
   - todo-backend-secret.yaml
   - broadcaster-deployment.yaml
   - broadcaster-service.yaml
-  - broadcaster-secret.yaml
+  # broadcaster-secret.yaml is created by GitHub Actions workflow, not from kustomize
   - nats-deployment.yaml
   - nats-service.yaml
   - postgres-statefulset.yaml

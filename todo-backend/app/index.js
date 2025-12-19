@@ -55,14 +55,20 @@ async function initNATS() {
 
 // Publish message to NATS
 function publishToNATS(message) {
-  if (natsConnection && !natsConnection.closed()) {
+  if (natsConnection) {
     try {
+      // Check if connection is closed
+      if (natsConnection.isClosed()) {
+        console.log('NATS connection is closed, skipping publish');
+        return;
+      }
       const sc = StringCodec();
       const payload = JSON.stringify({ message: message });
       natsConnection.publish('todos', sc.encode(payload));
       console.log('Published to NATS:', message);
     } catch (error) {
       console.error('Error publishing to NATS:', error);
+      console.error('Error details:', error.message);
     }
   } else {
     console.log('NATS not connected, skipping publish');
