@@ -54,7 +54,7 @@ async function initNATS() {
 }
 
 // Publish message to NATS
-function publishToNATS(message) {
+function publishToNATS(action, todo) {
   if (natsConnection) {
     try {
       // Check if connection is closed
@@ -63,9 +63,13 @@ function publishToNATS(message) {
         return;
       }
       const sc = StringCodec();
-      const payload = JSON.stringify({ message: message });
+      const payload = JSON.stringify({
+        action: action,
+        todo: todo,
+        timestamp: new Date().toISOString()
+      });
       natsConnection.publish('todos', sc.encode(payload));
-      console.log('Published to NATS:', message);
+      console.log('Published to NATS:', action, todo ? `(id: ${todo.id})` : '');
     } catch (error) {
       console.error('Error publishing to NATS:', error);
       console.error('Error details:', error.message);
@@ -266,7 +270,7 @@ const server = http.createServer(async (req, res) => {
         
         // Publish to NATS
         console.log(`[${timestamp}] Publishing to NATS: A todo was created`);
-        publishToNATS('A todo was created');
+        publishToNATS('created', newTodo);
         
         res.writeHead(201, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(newTodo));
