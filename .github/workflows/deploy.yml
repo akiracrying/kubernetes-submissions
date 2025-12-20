@@ -98,6 +98,22 @@ permissions:
           docker push akiracry/broadcaster:${{ github.sha }}
           docker push akiracry/broadcaster:latest
 
+      - name: Get GKE credentials (for main branch secret creation)
+        if: github.ref_name == 'main'
+        run: |
+          gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+            --zone ${{ env.GKE_ZONE }} \
+            --project ${{ env.PROJECT_ID }}
+
+      - name: Create/Update broadcaster secret (main branch only)
+        if: github.ref_name == 'main'
+        run: |
+          kubectl create secret generic broadcaster-secret \
+            --from-literal=TELEGRAM_BOT_TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}" \
+            --from-literal=TELEGRAM_CHAT_ID="${{ secrets.TELEGRAM_CHAT_ID }}" \
+            --namespace=project \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Update kustomization.yaml for GitOps (main branch only)
         if: github.ref_name == 'main'
         run: |
