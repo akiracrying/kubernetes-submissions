@@ -148,7 +148,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: akiracrying/the-project-config
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CONFIG_REPO_TOKEN || secrets.GITHUB_TOKEN }}
           path: config-repo
           ref: main
           fetch-depth: 0
@@ -169,7 +169,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: akiracrying/the-project-config
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CONFIG_REPO_TOKEN || secrets.GITHUB_TOKEN }}
           path: config-repo
           ref: main
           fetch-depth: 0
