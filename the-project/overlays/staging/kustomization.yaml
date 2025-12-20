@@ -4,34 +4,33 @@ kind: Kustomization
 namespace: staging
 
 resources:
-  - ../../base
+- ../../base
 
 patches:
-  - path: ingress-patch.yaml
-    target:
-      kind: Ingress
-      name: the-project
+- path: ingress-patch.yaml
+  target:
+    kind: Ingress
+    name: the-project
 
 patchesJson6902:
-  - target:
-      group: apps
-      version: v1
-      kind: Deployment
-      name: broadcaster
-    path: broadcaster-env-patch.json
+- path: broadcaster-env-patch.json
+  target:
+    group: apps
+    kind: Deployment
+    name: broadcaster
+    version: v1
 
 # Remove postgres-backup cronjob for staging
 patchesStrategicMerge:
-  - remove-postgres-backup.yaml
+- remove-postgres-backup.yaml
 
 images:
-  - name: akiracry/the-project
-    newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/the-project
-    newTag: latest # This will be replaced by github.sha
-  - name: akiracry/todo-backend
-    newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/todo-backend
-    newTag: latest # This will be replaced by github.sha
-  - name: akiracry/broadcaster
-    newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/broadcaster
-    newTag: latest # This will be replaced by github.sha
-
+- name: akiracry/broadcaster
+  newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/broadcaster
+  newTag: 3427978cede0bc65c8e4ddd768bc0b818fd9fc44
+- name: akiracry/the-project
+  newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/the-project
+  newTag: 3427978cede0bc65c8e4ddd768bc0b818fd9fc44
+- name: akiracry/todo-backend
+  newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/todo-backend
+  newTag: 3427978cede0bc65c8e4ddd768bc0b818fd9fc44
