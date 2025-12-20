@@ -15,13 +15,13 @@ patches:
 images:
 - name: akiracry/broadcaster
   newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/broadcaster
-  newTag: 4235ea8f810079c636a201c624b21e07a8a52268
+  newTag: 3166fa87aa895df8397eb993a1ab0bdef4dc3bf5
 - name: akiracry/the-project
   newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/the-project
-  newTag: 4235ea8f810079c636a201c624b21e07a8a52268
+  newTag: 3166fa87aa895df8397eb993a1ab0bdef4dc3bf5
 - name: akiracry/todo-backend
   newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/todo-backend
-  newTag: 4235ea8f810079c636a201c624b21e07a8a52268
+  newTag: 3166fa87aa895df8397eb993a1ab0bdef4dc3bf5
 - name: postgres-backup
   newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/postgres-backup
-  newTag: 4235ea8f810079c636a201c624b21e07a8a52268
+  newTag: 3166fa87aa895df8397eb993a1ab0bdef4dc3bf5
