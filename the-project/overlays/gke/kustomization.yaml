@@ -4,25 +4,24 @@ kind: Kustomization
 namespace: project
 
 resources:
-  - ../../base
+- ../../base
 
 patches:
-  - path: ingress-patch.yaml
-    target:
-      kind: Ingress
-      name: the-project
+- path: ingress-patch.yaml
+  target:
+    kind: Ingress
+    name: the-project
 
 images:
-  - name: akiracry/the-project
-    newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/the-project
-    newTag: latest # This will be replaced by github.sha
-  - name: akiracry/todo-backend
-    newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/todo-backend
-    newTag: latest # This will be replaced by github.sha
-  - name: akiracry/broadcaster
-    newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/broadcaster
-    newTag: latest # This will be replaced by github.sha
-  - name: postgres-backup
-    newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/postgres-backup
-    newTag: latest # This will be replaced by github.sha
-
+- name: akiracry/broadcaster
+  newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/broadcaster
+  newTag: 4235ea8f810079c636a201c624b21e07a8a52268
+- name: akiracry/the-project
+  newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/the-project
+  newTag: 4235ea8f810079c636a201c624b21e07a8a52268
+- name: akiracry/todo-backend
+  newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/todo-backend
+  newTag: 4235ea8f810079c636a201c624b21e07a8a52268
+- name: postgres-backup
+  newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/postgres-backup
+  newTag: 4235ea8f810079c636a201c624b21e07a8a52268
