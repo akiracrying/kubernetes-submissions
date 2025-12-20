@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/akiracrying/the-project-config.git
+    repoURL: https://github.com/akiracrying/kubernetes-submissions.git
     targetRevision: main
     path: the-project/overlays/production
   destination:
