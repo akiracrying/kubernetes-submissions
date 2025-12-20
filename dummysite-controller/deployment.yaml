@@ -16,7 +16,7 @@ spec:
       serviceAccountName: dummysite-controller
       containers:
         - name: controller
-          image: akiracry/dummysite-controller:latest
+          image: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/dummysite-controller:latest
           env:
             - name: PORT
               value: "3000"
