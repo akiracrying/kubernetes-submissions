@@ -19,6 +19,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          persist-credentials: true
+
+permissions:
+  contents: write
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -91,36 +98,47 @@ jobs:
           docker push akiracry/broadcaster:${{ github.sha }}
           docker push akiracry/broadcaster:latest
 
-      - name: Get GKE credentials
+      - name: Update kustomization.yaml for GitOps (main branch only)
+        if: github.ref_name == 'main'
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+          cd the-project/overlays/gke
+          kustomize edit set image akiracry/the-project=akiracry/the-project:${{ github.sha }}
+          kustomize edit set image akiracry/todo-backend=akiracry/todo-backend:${{ github.sha }}
+          kustomize edit set image akiracry/broadcaster=akiracry/broadcaster:${{ github.sha }}
+
+      - name: Commit and push kustomization changes (main branch only)
+        if: github.ref_name == 'main'
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add the-project/overlays/gke/kustomization.yaml
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update the-project images to ${{ github.sha }} [skip ci]"
+            git push
+          fi
+
+      - name: Get GKE credentials (non-main branches)
+        if: github.ref_name != 'main'
         run: |
           gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
             --zone ${{ env.GKE_ZONE }} \
             --project ${{ env.PROJECT_ID }}
 
-      - name: Determine namespace
+      - name: Determine namespace (non-main branches)
+        if: github.ref_name != 'main'
         id: namespace
         run: |
-          if [ "${{ github.ref_name }}" == "main" ]; then
-            echo "NAMESPACE=project" >> $GITHUB_OUTPUT
-          else
-            echo "NAMESPACE=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          fi
+          echo "NAMESPACE=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           echo "Deploying to namespace: ${{ steps.namespace.outputs.NAMESPACE }}"
 
-      - name: Create namespace if not exists
+      - name: Deploy to GKE (non-main branches)
+        if: github.ref_name != 'main'
         run: |
           kubectl create namespace ${{ steps.namespace.outputs.NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
-
-      - name: Create/Update broadcaster secret
-        run: |
-          kubectl create secret generic broadcaster-secret \
-            --from-literal=TELEGRAM_BOT_TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}" \
-            --from-literal=TELEGRAM_CHAT_ID="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            --namespace=${{ steps.namespace.outputs.NAMESPACE }} \
-            --dry-run=client -o yaml | kubectl apply -f -
-
-      - name: Deploy to GKE
-        run: |
           kubectl kustomize the-project/overlays/gke | \
             sed "s/namespace: project/namespace: ${{ steps.namespace.outputs.NAMESPACE }}/g" | \
             sed "s/  namespace: project/  namespace: ${{ steps.namespace.outputs.NAMESPACE }}/g" | \
@@ -129,13 +147,6 @@ jobs:
             sed "s/akiracry\/broadcaster:.*/${{ env.ARTIFACT_REGISTRY }}\/${{ env.PROJECT_ID }}\/docker-repo\/broadcaster:${{ github.sha }}/g" | \
             kubectl apply -f -
           
-          # Wait for rollouts with timeout, but don't fail if timeout occurs
           kubectl rollout status deployment/the-project -n ${{ steps.namespace.outputs.NAMESPACE }} --timeout=10m || true
           kubectl rollout status deployment/todo-backend -n ${{ steps.namespace.outputs.NAMESPACE }} --timeout=10m || true
-          kubectl rollout status deployment/broadcaster -n ${{ steps.namespace.outputs.NAMESPACE }} --timeout=10m || true
-          kubectl rollout status deployment/nats -n ${{ steps.namespace.outputs.NAMESPACE }} --timeout=10m || true
-          
-          # Show pod status for debugging
-          echo "Current pod status:"
-          kubectl get pods -n ${{ steps.namespace.outputs.NAMESPACE }}
 

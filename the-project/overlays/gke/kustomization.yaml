@@ -12,3 +12,14 @@ patches:
       kind: Ingress
       name: the-project
 
+images:
+  - name: akiracry/the-project
+    newName: akiracry/the-project
+    newTag: latest
+  - name: akiracry/todo-backend
+    newName: akiracry/todo-backend
+    newTag: latest
+  - name: akiracry/broadcaster
+    newName: akiracry/broadcaster
+    newTag: latest
+
