@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/akiracrying/the-project-config.git
     targetRevision: main
-    path: the-project/overlays/staging
+    path: overlays/staging
   destination:
     server: https://kubernetes.default.svc
     namespace: staging

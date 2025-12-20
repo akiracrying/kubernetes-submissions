@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: https://github.com/akiracrying/the-project-config.git
     targetRevision: main
-    path: the-project/overlays/production
+    path: overlays/production
   destination:
     server: https://kubernetes.default.svc
     namespace: production
