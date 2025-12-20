@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
             - name: backup
-              image: google/cloud-sdk:alpine
+              image: postgres-backup:latest
               env:
                 - name: POSTGRES_HOST
                   value: "postgres-project"
@@ -36,32 +36,6 @@ spec:
                   value: "k8s-course-project-backups"
                 - name: GOOGLE_APPLICATION_CREDENTIALS
                   value: /var/secrets/google/key.json
-              command:
-                - /bin/sh
-                - -c
-                - |
-                  set -e
-                  
-                  # Install postgresql client
-                  apk add --no-cache postgresql-client
-                  
-                  # Create backup filename with date
-                  BACKUP_FILE="backup-$(date +%Y-%m-%d).sql"
-                  
-                  # Perform pg_dump
-                  echo "Creating database backup..."
-                  PGPASSWORD=$POSTGRES_PASSWORD pg_dump \
-                    -h $POSTGRES_HOST \
-                    -p $POSTGRES_PORT \
-                    -U $POSTGRES_USER \
-                    -d $POSTGRES_DB \
-                    > /tmp/$BACKUP_FILE
-                  
-                  # Upload to GCS
-                  echo "Uploading backup to GCS bucket: gs://$GCS_BUCKET/$BACKUP_FILE"
-                  gsutil cp /tmp/$BACKUP_FILE gs://$GCS_BUCKET/$BACKUP_FILE
-                  
-                  echo "Backup completed: $BACKUP_FILE"
               volumeMounts:
                 - name: gcs-key
                   mountPath: /var/secrets/google

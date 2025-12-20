@@ -98,6 +98,14 @@ permissions:
           docker push akiracry/broadcaster:${{ github.sha }}
           docker push akiracry/broadcaster:latest
 
+      - name: Build and push postgres-backup image
+        run: |
+          docker build -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/postgres-backup:${{ github.sha }} \
+            -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/postgres-backup:latest \
+            ./postgres-backup
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/postgres-backup:${{ github.sha }}
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/postgres-backup:latest
+
       - name: Get GKE credentials (for main branch secret creation)
         if: github.ref_name == 'main'
         run: |
@@ -120,9 +128,10 @@ permissions:
           curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
           sudo mv kustomize /usr/local/bin/
           cd the-project/overlays/gke
-          kustomize edit set image akiracry/the-project=akiracry/the-project:${{ github.sha }}
-          kustomize edit set image akiracry/todo-backend=akiracry/todo-backend:${{ github.sha }}
-          kustomize edit set image akiracry/broadcaster=akiracry/broadcaster:${{ github.sha }}
+          kustomize edit set image akiracry/the-project=${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/the-project:${{ github.sha }}
+          kustomize edit set image akiracry/todo-backend=${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/todo-backend:${{ github.sha }}
+          kustomize edit set image akiracry/broadcaster=${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/broadcaster:${{ github.sha }}
+          kustomize edit set image postgres-backup=${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/postgres-backup:${{ github.sha }}
 
       - name: Commit and push kustomization changes (main branch only)
         if: github.ref_name == 'main'
@@ -158,9 +167,13 @@ permissions:
           kubectl kustomize the-project/overlays/gke | \
             sed "s/namespace: project/namespace: ${{ steps.namespace.outputs.NAMESPACE }}/g" | \
             sed "s/  namespace: project/  namespace: ${{ steps.namespace.outputs.NAMESPACE }}/g" | \
-            sed "s/akiracry\/the-project:.*/${{ env.ARTIFACT_REGISTRY }}\/${{ env.PROJECT_ID }}\/docker-repo\/the-project:${{ github.sha }}/g" | \
-            sed "s/akiracry\/todo-backend:.*/${{ env.ARTIFACT_REGISTRY }}\/${{ env.PROJECT_ID }}\/docker-repo\/todo-backend:${{ github.sha }}/g" | \
-            sed "s/akiracry\/broadcaster:.*/${{ env.ARTIFACT_REGISTRY }}\/${{ env.PROJECT_ID }}\/docker-repo\/broadcaster:${{ github.sha }}/g" | \
+            sed "s|europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/the-project:.*|${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/the-project:${{ github.sha }}|g" | \
+            sed "s|akiracry/the-project:.*|${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/the-project:${{ github.sha }}|g" | \
+            sed "s|europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/todo-backend:.*|${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/todo-backend:${{ github.sha }}|g" | \
+            sed "s|akiracry/todo-backend:.*|${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/todo-backend:${{ github.sha }}|g" | \
+            sed "s|europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/broadcaster:.*|${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/broadcaster:${{ github.sha }}|g" | \
+            sed "s|akiracry/broadcaster:.*|${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/broadcaster:${{ github.sha }}|g" | \
+            sed "s|postgres-backup:.*|${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/postgres-backup:${{ github.sha }}|g" | \
             kubectl apply -f -
           
           kubectl rollout status deployment/the-project -n ${{ steps.namespace.outputs.NAMESPACE }} --timeout=10m || true

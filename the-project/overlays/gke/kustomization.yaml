@@ -14,12 +14,15 @@ patches:
 
 images:
   - name: akiracry/the-project
-    newName: akiracry/the-project
-    newTag: latest
+    newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/the-project
+    newTag: latest # This will be replaced by github.sha
   - name: akiracry/todo-backend
-    newName: akiracry/todo-backend
-    newTag: latest
+    newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/todo-backend
+    newTag: latest # This will be replaced by github.sha
   - name: akiracry/broadcaster
-    newName: akiracry/broadcaster
-    newTag: latest
+    newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/broadcaster
+    newTag: latest # This will be replaced by github.sha
+  - name: postgres-backup
+    newName: europe-north1-docker.pkg.dev/dotted-byway-481522-f5/docker-repo/postgres-backup
+    newTag: latest # This will be replaced by github.sha
 
