@@ -20,7 +20,7 @@ spec:
             - name: shared-volume
               mountPath: /shared
         - name: reader
-          image: akiracry/log-output-reader:3.2
+          image: akiracry/log-output-reader:latest
           env:
             - name: PORT
               value: "3000"

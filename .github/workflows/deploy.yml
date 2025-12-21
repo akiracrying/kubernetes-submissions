@@ -168,6 +168,25 @@ jobs:
           docker push akiracry/greeter-v2:$IMAGE_TAG
           docker push akiracry/greeter-v2:latest
 
+      - name: Build and push log-output-reader image
+        run: |
+          if [ "${{ github.ref_type }}" == "tag" ]; then
+            IMAGE_TAG="${{ github.ref_name }}"
+          else
+            IMAGE_TAG="${{ github.sha }}"
+          fi
+          docker build -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/log-output-reader:$IMAGE_TAG \
+            -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/log-output-reader:latest \
+            -t akiracry/log-output-reader:$IMAGE_TAG \
+            -t akiracry/log-output-reader:latest \
+            ./log_output/reader
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/log-output-reader:$IMAGE_TAG
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/log-output-reader:latest
+          
+          # Push to Docker Hub
+          docker push akiracry/log-output-reader:$IMAGE_TAG
+          docker push akiracry/log-output-reader:latest
+
       - name: Get GKE credentials (for secret creation)
         if: github.ref_name == 'main' || startsWith(github.ref, 'refs/tags/')
         run: |
