@@ -6,9 +6,9 @@ WAIT_TIME=$((300 + RANDOM % 600))
 echo "Waiting $WAIT_TIME seconds (between 5 and 15 minutes) before downloading random Wikipedia page..."
 sleep $WAIT_TIME
 
-# Download random Wikipedia page
+# Download random Wikipedia page (nginx uses /usr/share/nginx/html)
 echo "Downloading random Wikipedia page..."
-curl -L -o /www/index.html https://en.wikipedia.org/wiki/Special:Random
+curl -L -o /usr/share/nginx/html/index.html https://en.wikipedia.org/wiki/Special:Random
 
 echo "Random Wikipedia page downloaded successfully"
 
