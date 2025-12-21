@@ -1,5 +1,7 @@
 # CNCF Landscape Skillset
 
+![CNCF Landscape Skillset](./my-skillset.jpg)
+
 This landscape includes the cloud-native and supporting technologies I have used during the course and related projects.
 
 Kubernetes was used as the core orchestration platform, with k3d for running local clusters and containerd as the container runtime.
