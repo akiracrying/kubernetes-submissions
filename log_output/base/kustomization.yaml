@@ -10,7 +10,7 @@ resources:
 images:
 - name: akiracry/log-output-reader
   newName: akiracry/log-output-reader
-  newTag: 9ed6eb01c13f64088c96e8ee7936d0474bf9e25a
+  newTag: b43a7576d977397608a591c1e7dd47733875dbad
 - name: akiracry/log-output-writer
   newName: akiracry/log-output-writer
-  newTag: 9ed6eb01c13f64088c96e8ee7936d0474bf9e25a
+  newTag: b43a7576d977397608a591c1e7dd47733875dbad
