@@ -187,6 +187,34 @@ jobs:
           docker push akiracry/log-output-reader:$IMAGE_TAG
           docker push akiracry/log-output-reader:latest
 
+      - name: Build and push wikipedia-app images
+        run: |
+          if [ "${{ github.ref_type }}" == "tag" ]; then
+            IMAGE_TAG="${{ github.ref_name }}"
+          else
+            IMAGE_TAG="${{ github.sha }}"
+          fi
+          docker build -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/wikipedia-init:$IMAGE_TAG \
+            -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/wikipedia-init:latest \
+            -t akiracry/wikipedia-init:$IMAGE_TAG \
+            -t akiracry/wikipedia-init:latest \
+            ./wikipedia-app/init
+          docker build -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/wikipedia-sidecar:$IMAGE_TAG \
+            -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/wikipedia-sidecar:latest \
+            -t akiracry/wikipedia-sidecar:$IMAGE_TAG \
+            -t akiracry/wikipedia-sidecar:latest \
+            ./wikipedia-app/sidecar
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/wikipedia-init:$IMAGE_TAG
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/wikipedia-init:latest
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/wikipedia-sidecar:$IMAGE_TAG
+          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/docker-repo/wikipedia-sidecar:latest
+          
+          # Push to Docker Hub
+          docker push akiracry/wikipedia-init:$IMAGE_TAG
+          docker push akiracry/wikipedia-init:latest
+          docker push akiracry/wikipedia-sidecar:$IMAGE_TAG
+          docker push akiracry/wikipedia-sidecar:latest
+
       - name: Get GKE credentials (for secret creation)
         if: github.ref_name == 'main' || startsWith(github.ref, 'refs/tags/')
         run: |

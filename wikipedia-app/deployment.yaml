@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wikipedia-app
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wikipedia-app
+  template:
+    metadata:
+      labels:
+        app: wikipedia-app
+    spec:
+      initContainers:
+        - name: init-download
+          image: akiracry/wikipedia-init:5.4
+          volumeMounts:
+            - name: www-data
+              mountPath: /www
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: www-data
+              mountPath: /usr/share/nginx/html
+        - name: sidecar
+          image: akiracry/wikipedia-sidecar:5.4
+          volumeMounts:
+            - name: www-data
+              mountPath: /www
+      volumes:
+        - name: www-data
+          emptyDir: {}
+
