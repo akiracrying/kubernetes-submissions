@@ -6,3 +6,9 @@ Istio was installed using the Istio CLI and configured in Ambient mode on a k3d 
 
 Network traffic and connectivity were verified according to the tutorial, and all deployed resources were cleaned up afterwards.
 
+Everything was successfully deployed and running as expected.
+
+## Screenshot
+
+![Istio Ambient Setup Result](./result.jpg)
+
