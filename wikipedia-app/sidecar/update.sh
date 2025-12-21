@@ -1,5 +1,4 @@
 #!/bin/sh
-set -e
 
 # Generate random wait time between 5 and 15 minutes (300-900 seconds)
 WAIT_TIME=$((300 + RANDOM % 600))

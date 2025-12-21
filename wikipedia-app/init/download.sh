@@ -1,5 +1,4 @@
 #!/bin/sh
-set -e
 
 # Create www directory if it doesn't exist (nginx uses /usr/share/nginx/html)
 mkdir -p /usr/share/nginx/html
