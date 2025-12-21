@@ -28,6 +28,10 @@ spec:
               value: "ping-pong"
             - name: PING_PONG_PORT
               value: "3000"
+            - name: GREETER_SERVICE
+              value: "greeter-svc"
+            - name: GREETER_PORT
+              value: "3000"
             - name: MESSAGE
               valueFrom:
                 configMapKeyRef:

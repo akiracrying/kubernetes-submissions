@@ -59,6 +59,7 @@ Submissions for k8s MOOC course
 ### Chapter 5
 - [5.1](../../tree/5.1/dummysite-controller)
 - [5.2](../../tree/5.2/istio-ambient)
+- [5.3](../../tree/5.3/log-output-istio)
 
 ## Exercise 3.9: DBaaS vs DIY - Pros/Cons Comparison
 
