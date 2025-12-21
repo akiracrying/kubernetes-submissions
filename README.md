@@ -63,6 +63,7 @@ Submissions for k8s MOOC course
 - [5.4](../../tree/5.4/wikipedia-app)
 - [5.5](../../tree/5.5/platform-comparison)
 - [5.6](../../tree/5.6/knative-serving)
+- [5.7](../../tree/5.7/ping-pong-serverless)
 
 ## Exercise 3.9: DBaaS vs DIY - Pros/Cons Comparison
 
