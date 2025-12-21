@@ -61,6 +61,7 @@ Submissions for k8s MOOC course
 - [5.2](../../tree/5.2/istio-ambient)
 - [5.3](../../tree/5.3/log-output-istio)
 - [5.4](../../tree/5.4/wikipedia-app)
+- [5.5](../../tree/5.5/platform-comparison)
 
 ## Exercise 3.9: DBaaS vs DIY - Pros/Cons Comparison
 
