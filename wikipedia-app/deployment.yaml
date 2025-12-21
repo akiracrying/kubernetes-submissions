@@ -18,7 +18,7 @@ spec:
           image: akiracry/wikipedia-init:5.4
           volumeMounts:
             - name: www-data
-              mountPath: /www
+              mountPath: /usr/share/nginx/html
       containers:
         - name: nginx
           image: nginx:alpine
@@ -31,7 +31,7 @@ spec:
           image: akiracry/wikipedia-sidecar:5.4
           volumeMounts:
             - name: www-data
-              mountPath: /www
+              mountPath: /usr/share/nginx/html
       volumes:
         - name: www-data
           emptyDir: {}
